@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Ticket Order</title>
+    <style>
+        body {
+            background-image: url('./cinema-background.jpg');
+            background-repeat: no-repeat;
+            background-size: cover;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        .title {
+            margin-bottom: 2rem;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+            font-size: 20px;
+        }
+
+        .icon {
+            width: 24px;
+            height: 24px;
+            position: absolute;
+            top: 30px;
+            right: 38px;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .icon.icon-success {
+            fill: green;
+        }
+
+        .icon.icon-error {
+            fill: red;
+        }
+
+        .container {
+            width: 96vh;
+            height: 95vh;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            /* margin: 3rem auto; */
+            padding: 1rem;
+            /* border: 1px solid #ddd; */
+            border-radius: .6rem;
+            /* background-color: #242333; */
+            background-color: #2423339e;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        .label {
+            font-weight: bold;
+            display: block;
+            color: #333;
+            margin-bottom: .25rem;
+            color: white;
+        }
+
+        .input {
+            appearance: none;
+            display: inline-block;
+            width: 100%;
+            color: #2d3748;
+            border: 1px solid #cbd5e0;
+            line-height: 1.25;
+            background-color: white;
+            padding: .65rem .75rem;
+            border-radius: 0.25rem;
+            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+        }
+
+        .input ::placeholder {
+            color: #a0aec0;
+        }
+
+        .input.input-error {
+            border: 1px solid red;
+        }
+
+        .input.input-error:focus {
+            border: 1px solid red;
+        }
+
+        .input:focus {
+            outline: none;
+            border: 1px solid #a0aec0;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            background-clip: padding-box;
+        }
+
+        .input-group {
+            margin-bottom: 2rem;
+            position: relative;
+            width: 50%;
+            /* display: inline-block; */
+            padding: 0 7px;
+            float: left;
+        }
+
+        .error-message {
+            font-size: .85rem;
+            color: red;
+        }
+
+        .button {
+            background-color: blueviolet;
+            padding: 0.5rem 2rem;
+            border: none;
+            border-radius: .25rem;
+            color: white;
+            font-weight: bold;
+            display: inline-block;
+            /* width: 100%; */
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .button:hover {
+            filter: brightness(110%);
+        }
+
+        .button:focus {
+            outline: none;
+        }
+
+        .disabled {
+            background-color: rgb(197, 197, 197);
+        }
+
+        .disabled:hover {
+            filter: none;
+        }
+
+        .flex-container {
+            display: flex;
+        }
+
+        .flex-container div {
+            flex-grow: 1;
+        }
+
+        .action-container {
+            height: 10px;
+            margin-top: 4%;
+        }
+
+        /* table part begin */
+        .styled-table {
+            border-collapse: collapse;
+            font-size: 0.9em;
+            font-family: sans-serif;
+            width: 100%;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .styled-table thead tr {
+            background-color: #009879;
+            color: #ffffff;
+            text-align: left;
+        }
+
+        .styled-table th,
+        .styled-table td {
+            padding: 12px 15px;
+        }
+
+        .styled-table tbody tr {
+            border-bottom: 1px solid #dddddd;
+            font-weight: bold;
+            color: #9dffeb;
+            border-bottom: 2px solid #009879;
+
+        }
+
+        .styled-table tbody tr:nth-of-type(even) {
+            background-color: #f3f3f3;
+        }
+
+        /* table part end */
+
+        .step {
+            height: 76vh;
+        }
+
+        .step1,
+        .step3 {
+            padding-top: 10vh;
+        }
+
+        .step2 {
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Lato', sans-serif;
+            margin: 0;
+        }
+
+        .seat-row {
+            font-size: 18px;
+            font-weight: bold;
+            padding: 8px;
+            width: 36px;
+        }
+
+        .seat {
+            background-color: #444451;
+            height: 30px;
+            width: 30px;
+            margin: 4px;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+            text-align: center;
+            vertical-align: middle;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .seat.selected {
+            background-color: #ff4242 !important;
+        }
+
+        .seat.occupied {
+            background-color: rgb(159, 159, 159) !important;
+        }
+
+        .seat:nth-of-type(3) {
+            margin-right: 25px;
+        }
+
+        .seat:nth-of-type(6) {
+            margin-right: 1px;
+        }
+
+        .seat:nth-of-type(7) {
+            margin-left: 1px;
+        }
+
+        .seat:nth-last-of-type(2) {
+            margin-left: 25px;
+        }
+
+        .seat:not(.occupied):hover {
+            cursor: pointer;
+            transform: scale(1.2);
+        }
+
+        .heart-seat-selected {
+            filter: brightness(200%);
+        }
+
+        .showcase .seat:not(.occupied):hover {
+            cursor: default;
+            transform: scale(1);
+        }
+
+        .showcase {
+            background: rgba(0, 0, 0, 0.1);
+            /* padding: 5px 10px; */
+            border-radius: 5px;
+            color: #777;
+            list-style-type: none;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .showcase li {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 10px;
+        }
+
+        .showcase li small {
+            margin-left: 2px;
+        }
+
+        .row {
+            display: flex;
+        }
+
+        .row:nth-of-type(8) {
+            margin-top: 30px;
+        }
+
+        .screen {
+            color: black;
+            text-align: center;
+            font-size: 24px;
+            background-color: #fff;
+            height: 70px;
+            width: 100%;
+            padding-top: 20px;
+            margin: 15px 0;
+            transform: rotateX(-45deg);
+            box-shadow: 0 3px 10px rgba(255, 255, 255, 0.7);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- template -->
+
+    <div class="container">
+        <div class="title">Cinema Seat Reservation </div>
+        <form action="#" class="form">
+
+            <div class="step step1">
+                <div class="flex-container">
+                    <div class="input-group">
+                        <label for="title" class="label">Title</label>
+                        <select id="title" class="input" style="appearance: auto;" placeholder="1">
+                            <option value="" selected>Select a Title</option>
+                            <option value="Mr">Mr</option>
+                            <option value="Mrs">Mrs</option>
+                            <option value="Miss">Miss</option>
+                            <option value="Ms">Ms</option>
+                        </select>
+                        <span class="error-message"></span>
+                        <svg class="icon icon-success hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                            fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                clip-rule="evenodd" />
+                        </svg>
+
+                        <svg class="icon icon-error hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                            fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="firstName" class="label">First Name</label>
+                        <input id="firstName" placeholder="Enter your first name" type="text" class="input"
+                            autocomplete="off">
+                        <span class="error-message"></span>
+                        <svg class="icon icon-success hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                            fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                clip-rule="evenodd" />
+                        </svg>
+
+                        <svg class="icon icon-error hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                            fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="lastName" class="label">Last Name</label>
+                        <input id="lastName" placeholder="Enter your last name" type="text" class="input"
+                            autocomplete="off">
+                        <span class="error-message"></span>
+                        <svg class="icon icon-success hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                            fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                clip-rule="evenodd" />
+                        </svg>
+
+                        <svg class="icon icon-error hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                            fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="flex-container">
+                    <div class="input-group">
+                        <label for="email" class="label">Email</label>
+                        <input id="email" type="email" class="input" autocomplete="off" placeholder="Enter your e-mail">
+                        <span class="error-message"></span>
+                        <svg class="icon icon-success hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                            fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                clip-rule="evenodd" />
+                        </svg>
+
+                        <svg class="icon icon-error hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                            fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="numberOfSeats" class="label">Number of Seats</label>
+                        <input id="numberOfSeats" type="number" min="1" max="80" placeholder="Set the number of seats"
+                            oninput="validity.valid||(value='');" class="input" autocomplete="off">
+                        <span class="error-message"></span>
+                        <svg class="icon icon-success hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                            fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                clip-rule="evenodd" />
+                        </svg>
+
+                        <svg class="icon icon-error hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                            fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- <input type="submit" class="button" value="Seat Selection"> -->
+            </div>
+
+            <div class="step step2">
+                <ul class="showcase">
+                    <li>
+                        <div class="seat"></div>
+                        <small>N/A</small>
+                    </li>
+                    <li>
+                        <div class="seat selected"></div>
+                        <small>Selected</small>
+                    </li>
+                    <li>
+                        <div class="seat occupied"></div>
+                        <small>Occupied</small>
+                    </li>
+                </ul>
+
+                <div>
+                    Selected seat count:
+                    <span class="seat-number">0</span>/
+                    <span class="specified-seat-number"></span>
+                </div>
+
+                <div class="seat-validation hidden">
+                    <span class="error-message"></span>
+                </div>
+
+                <div class="screen-container">
+                    <div class="screen">Screen</div>
+                </div>
+            </div>
+
+            <div class="step step3">
+                <table class="styled-table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>First Name/Last Name</th>
+                            <th>Email</th>
+                            <th>Number of Seats</th>
+                            <th>Selected Seats</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="r-title"></td>
+                            <td class="r-name"></td>
+                            <td class="r-email"></td>
+                            <td class="r-seats"></td>
+                            <td class="r-selected-seats"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="action-container">
+                <button onclick="goPrevious()" id="previousButton" class="button hidden"
+                    style="float: left;">Previous</button>
+                <button onclick="goNext()" id="nextButton" class="button" style="float: right;">Next</button>
+            </div>
+
+        </form>
+    </div>
+
+    <!-- template -->
+
+    <script>
+        class MovieTicketStepper {
+            constructor(form, fields, step, formValues) {
+                this.form = form;
+                this.fields = fields;
+                this.step = step;
+                this.formValues = formValues;
+            }
+
+            initialize() {
+                this.cleanSeats();
+                this.validateOnEntry();
+                this.setSteps();
+                this.initializeStep2();
+            }
+
+            validateOnEntry() {
+                let self = this;
+
+                this.fields.forEach(field => {
+                    const input = document.querySelector(`#${field}`);
+
+                    input.addEventListener('input', event => {
+                        self.validateFields(input);
+                    });
+                });
+            }
+
+            validateFields(field, fromSubmit, seatFlag) {
+                let self = this;
+                let status = true;
+
+                if (self.step === 2 || seatFlag) {
+                    let selectedSeats = JSON.parse(localStorage.getItem('selectedSeats'));
+
+                    const seatField = document.querySelector('.seat-validation');
+
+                    if (!selectedSeats) {
+                        selectedSeats = [];
+                    }
+
+                    if (selectedSeats.length !== parseInt(self.formValues.numberOfSeats)) {
+                        this.setStatus(seatField, 'The number of seats specified and the number of seats selected do not match', 'error', true);
+                        status = false;
+                    } else {
+                        this.setStatus(seatField, null, 'success', true);
+                    }
+                } else {
+                    // Check presence of values
+                    if (field.value.trim() === '') {
+                        this.setStatus(field, `${field.previousElementSibling.innerText} cannot be blank`, 'error');
+                        status = false;
+                    } else {
+                        this.setStatus(field, null, 'success');
+                    }
+
+                    // check for a valid email address
+                    if (field.type === 'email') {
+                        // const re = /\S+@\S+\.\S+/;
+                        const re = /^[^ ]+@[^ ]+\.[a-z]{2,3}$/;
+                        if (re.test(field.value)) {
+                            this.setStatus(field, null, 'success');
+                        } else {
+                            this.setStatus(field, 'Please enter valid email address', 'error');
+                            status = false;
+                        }
+                    }
+                }
+
+                let res = { status: status };
+                if (fromSubmit) {
+                    res[field.id] = field.value;
+                }
+                return res;
+            }
+
+            setStatus(field, message, status, seatValidation) {
+                const successIcon = field.parentElement.querySelector('.icon-success');
+                const errorIcon = field.parentElement.querySelector('.icon-error');
+                const errorMessage = field.parentElement.querySelector('.error-message');
+
+                if (status === 'success') {
+                    if (errorIcon) { errorIcon.classList.add('hidden'); }
+                    if (errorMessage) { errorMessage.innerText = ''; }
+
+                    if (seatValidation) {
+                        field.classList.add('hidden');
+                    } else {
+                        successIcon.classList.remove('hidden');
+                    }
+
+                    field.classList.remove('input-error');
+                }
+
+                if (status === 'error') {
+                    if (successIcon) { successIcon.classList.add('hidden'); }
+                    field.parentElement.querySelector('.error-message').innerText = message;
+
+                    if (seatValidation) {
+                        field.classList.remove('hidden');
+                    } else {
+                        errorIcon.classList.remove('hidden');
+                    }
+
+                    field.classList.add('input-error');
+                }
+            }
+
+            goPrevious() {
+                let self = this;
+                self.step--;
+                this.setButtonsStatus();
+                this.setSteps();
+            }
+
+            goNext() {
+                let self = this;
+                let isFormValid = true;
+                let validateResult;
+
+                switch (self.step) {
+                    case 1:
+                        self.fields.forEach(field => {
+                            const input = document.querySelector(`#${field}`);
+                            validateResult = self.validateFields(input, true);
+                            if (!validateResult.status) {
+                                isFormValid = false;
+                            } else {
+                                self.formValues = {
+                                    title: validateResult.title ? validateResult.title : self.formValues.title,
+                                    firstName: validateResult.firstName ? validateResult.firstName : self.formValues.firstName,
+                                    lastName: validateResult.lastName ? validateResult.lastName : self.formValues.lastName,
+                                    email: validateResult.email ? validateResult.email : self.formValues.email,
+                                    numberOfSeats: validateResult.numberOfSeats ? validateResult.numberOfSeats : self.formValues.numberOfSeats
+                                };
+                            }
+                        });
+
+                        if (isFormValid) {
+                            self.step++;
+                        }
+
+                        const specifiedSeatNumberElement = document.querySelector('.specified-seat-number');
+                        specifiedSeatNumberElement.innerText = self.formValues.numberOfSeats;
+
+                        this.validateFields(null, null, true);
+
+                        break;
+
+                    case 2:
+                        validateResult = this.validateFields(null, null, true);
+                        if (validateResult.status) {
+                            self.step++;
+                        }
+                        break;
+                    case 3:
+                        alert('Your reservation has been completed successfully.');
+                        this.cleanForm();
+                        break;
+                };
+
+                this.setButtonsStatus();
+                this.setSteps();
+            }
+
+            setButtonsStatus() {
+                let self = this;
+                const previousButton = document.getElementById('previousButton');
+                const nextButton = document.getElementById('nextButton');
+                if (self.step !== 1) {
+                    this.show(previousButton);
+                } else {
+                    this.hide(previousButton);
+                }
+
+                if (self.step !== 3) {
+                    nextButton.innerHTML = 'Next';
+                    nextButton.style.backgroundColor = 'blueviolet';
+                }
+                else {
+                    nextButton.innerHTML = 'Order';
+                    nextButton.style.backgroundColor = '#9CCC65';
+                }
+            }
+
+            setSteps() {
+                let self = this;
+                const steps = document.querySelectorAll('.step');
+                steps.forEach(element => {
+                    if (element.classList.contains(`step${self.step}`)) {
+                        if (self.step === 3) {
+                            const title = document.querySelector('.r-title');
+                            title.innerHTML = self.formValues.title;
+
+                            const name = document.querySelector('.r-name');
+                            name.innerHTML = self.formValues.firstName + self.formValues.lastName;
+
+                            const email = document.querySelector('.r-email');
+                            email.innerHTML = self.formValues.email;
+
+                            const seats = document.querySelector('.r-seats');
+                            seats.innerHTML = self.formValues.numberOfSeats;
+
+                            const selectedSeats = document.querySelector('.r-selected-seats');
+                            selectedSeats.innerHTML = JSON.parse(localStorage.getItem('selectedSeats')).join(',');
+
+                        }
+                        this.show(element);
+                    } else {
+                        this.hide(element);
+                    }
+                })
+            }
+
+            cleanForm() {
+                let self = this;
+                self.form.reset();
+                self.step = 1;
+                this.setButtonsStatus();
+                this.initialize();
+                this.goNext();
+            }
+
+            cleanSeats() {
+                const seats = document.querySelectorAll('.row .seat:not(.occupied)');
+                seats.forEach(seat => {
+                    seat.classList.remove('selected', 'heart-seat-selected');
+                });
+
+                localStorage.clear();
+
+                const seatNumberElement = document.querySelector('.seat-number');
+                seatNumberElement.innerText = 0;
+            }
+
+            show(elementRef) {
+                elementRef.classList.remove('hidden')
+            }
+
+            hide(elementRef) {
+                elementRef.classList.add('hidden')
+            }
+
+            initializeStep2() {
+                if (document.querySelectorAll('.row').length < 1) {
+                    this.addSeatSelectEvents();
+                    this.generateSeats();
+                }
+            }
+
+            // Update selectes seats begin
+            updateSelectedSeats(currentSelectedSeat) {
+                let self = this;
+                let selectedSeats = JSON.parse(localStorage.getItem('selectedSeats'));
+                if (!selectedSeats) {
+                    selectedSeats = [];
+                }
+
+                if (currentSelectedSeat.status) {
+                    selectedSeats.push(currentSelectedSeat.value);
+                } else {
+                    selectedSeats = selectedSeats.filter(function (seat) {
+                        return seat != currentSelectedSeat.value;
+                    });
+                }
+
+                const seatNumberElement = document.querySelector('.seat-number');
+                seatNumberElement.innerText = selectedSeats.length;
+
+                localStorage.setItem('selectedSeats', JSON.stringify(selectedSeats));
+            };
+            // Update selectes seats end
+
+            // Seat select event begin
+            addSeatSelectEvents() {
+                const screenContainer = document.querySelector('.screen-container');
+
+                screenContainer.addEventListener('click', e => {
+                    let selectedSeat = {};
+
+                    if (
+                        e.target.classList.contains('seat') &&
+                        !e.target.classList.contains('occupied')
+                    ) {
+                        e.target.classList.toggle('selected');
+
+                        if (e.target.classList.contains('heart-seat')) {
+                            e.target.classList.toggle('heart-seat-selected');
+                        }
+
+                        e.target.parentNode.childNodes.forEach(element => {
+                            if (element.classList.contains('seat-row')) {
+                                selectedSeat.value = `${element.innerText}-${e.target.innerText}`;
+                            }
+                        })
+
+                        selectedSeat.status = e.target.classList.contains('selected') ? true : false;
+                        this.updateSelectedSeats(selectedSeat);
+                        this.validateFields();
+                    }
+                });
+            }
+            // Seat select event end
+
+            // Generate seats begin
+            generateSeats() {
+                const screenContainer = document.querySelector('.screen-container');
+
+                const str = 'abcdefghijklmnopqrstuvwxyz';
+                const alphaUpperArray = str.toUpperCase().split('');
+
+                for (let i = 0; i < 10; i++) {
+                    const row = document.createElement('div');
+                    row.classList.add('row');
+
+                    const seatRow = document.createElement('div');
+                    seatRow.classList.add('seat-row');
+                    seatRow.innerText = alphaUpperArray[i];
+                    row.appendChild(seatRow);
+
+
+                    const seatRef = document.createElement('div');
+                    seatRef.classList.add('seat');
+
+                    for (let j = 1; j < 11; j++) {
+                        const seat = seatRef.cloneNode(true);
+                        seat.innerText = j;
+                        if (j === 3 || j == 8) {
+                            seat.classList.add('occupied');
+                        }
+
+                        if (j === 5 || j === 6) {
+                            seat.style.cssText = 'background-color:unset !important';
+                            seat.style.backgroundImage = 'url("heart-seat.png")';
+                            seat.style.backgroundSize = '106%';
+                            seat.style.backgroundRepeat = 'no-repeat';
+                            seat.style.width = '35px';
+                            seat.classList.add('heart-seat');
+                        }
+                        row.appendChild(seat);
+
+                    }
+
+                    screenContainer.appendChild(row);
+                }
+            }
+            // Generate seats end
+        }
+
+        const form = document.querySelector('.form');
+        const fields = ['title', 'firstName', 'lastName', 'email', 'numberOfSeats'];
+        const step = 1;
+        const formValues = {};
+
+        const validator = new MovieTicketStepper(form, fields, step, formValues);
+        validator.initialize();
+
+        function goNext() {
+            validator.goNext();
+        };
+
+        function goPrevious() {
+            validator.goPrevious();
+        };
+    </script>
+
+</body>
+
+</html>
