@@ -55,11 +55,8 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            /* margin: 3rem auto; */
             padding: 1rem;
-            /* border: 1px solid #ddd; */
             border-radius: .6rem;
-            /* background-color: #242333; */
             background-color: #2423339e;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
         }
@@ -108,7 +105,6 @@
             margin-bottom: 2rem;
             position: relative;
             width: 50%;
-            /* display: inline-block; */
             padding: 0 7px;
             float: left;
         }
@@ -118,6 +114,7 @@
             color: red;
         }
 
+        /* buttons begin */
         .button {
             background-color: blueviolet;
             padding: 0.5rem 2rem;
@@ -126,7 +123,6 @@
             color: white;
             font-weight: bold;
             display: inline-block;
-            /* width: 100%; */
             text-align: center;
             cursor: pointer;
         }
@@ -139,14 +135,9 @@
             outline: none;
         }
 
-        .disabled {
-            background-color: rgb(197, 197, 197);
-        }
+        /* buttons end */
 
-        .disabled:hover {
-            filter: none;
-        }
-
+        /* step1 flex part begin */
         .flex-container {
             display: flex;
         }
@@ -154,6 +145,8 @@
         .flex-container div {
             flex-grow: 1;
         }
+
+        /* step1 flex part end */
 
         .action-container {
             height: 10px;
@@ -200,9 +193,10 @@
 
         .step1,
         .step3 {
-            padding-top: 10vh;
+            padding-top: 4vh;
         }
 
+        /* step2 and seats begin */
         .step2 {
             color: #fff;
             display: flex;
@@ -273,7 +267,6 @@
 
         .showcase {
             background: rgba(0, 0, 0, 0.1);
-            /* padding: 5px 10px; */
             border-radius: 5px;
             color: #777;
             list-style-type: none;
@@ -312,12 +305,14 @@
             transform: rotateX(-45deg);
             box-shadow: 0 3px 10px rgba(255, 255, 255, 0.7);
         }
+
+        /* step2 and seats end */
     </style>
 </head>
 
 <body>
 
-    <!-- template -->
+    <!-- template begin-->
 
     <div class="container">
         <div class="title">Cinema Seat Reservation </div>
@@ -432,7 +427,6 @@
                     </div>
                 </div>
 
-                <!-- <input type="submit" class="button" value="Seat Selection"> -->
             </div>
 
             <div class="step step2">
@@ -498,7 +492,7 @@
         </form>
     </div>
 
-    <!-- template -->
+    <!-- template end-->
 
     <script>
         class MovieTicketStepper {
@@ -511,19 +505,26 @@
 
             initialize() {
                 this.cleanSeats();
-                this.validateOnEntry();
+                this.setFormValidation();
                 this.setSteps();
                 this.initializeStep2();
             }
 
-            validateOnEntry() {
+            setFormValidation() {
                 let self = this;
 
                 this.fields.forEach(field => {
                     const input = document.querySelector(`#${field}`);
 
                     input.addEventListener('input', event => {
-                        self.validateFields(input);
+                        this.validateFields(input);
+                    });
+
+                    input.addEventListener('keypress', event => {
+                        if (event.keyCode === 13) {
+                            event.preventDefault();
+                            this.goNext();
+                        }
                     });
                 });
             }
@@ -532,6 +533,7 @@
                 let self = this;
                 let status = true;
 
+                // step2 validation for number of seats
                 if (self.step === 2 || seatFlag) {
                     let selectedSeats = JSON.parse(localStorage.getItem('selectedSeats'));
 
@@ -548,7 +550,7 @@
                         this.setStatus(seatField, null, 'success', true);
                     }
                 } else {
-                    // Check presence of values
+                    // step1, validation for form values
                     if (field.value.trim() === '') {
                         this.setStatus(field, `${field.previousElementSibling.innerText} cannot be blank`, 'error');
                         status = false;
@@ -558,8 +560,7 @@
 
                     // check for a valid email address
                     if (field.type === 'email') {
-                        // const re = /\S+@\S+\.\S+/;
-                        const re = /^[^ ]+@[^ ]+\.[a-z]{2,3}$/;
+                        const re = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
                         if (re.test(field.value)) {
                             this.setStatus(field, null, 'success');
                         } else {
@@ -624,7 +625,7 @@
                     case 1:
                         self.fields.forEach(field => {
                             const input = document.querySelector(`#${field}`);
-                            validateResult = self.validateFields(input, true);
+                            validateResult = this.validateFields(input, true);
                             if (!validateResult.status) {
                                 isFormValid = false;
                             } else {
@@ -646,9 +647,7 @@
                         specifiedSeatNumberElement.innerText = self.formValues.numberOfSeats;
 
                         this.validateFields(null, null, true);
-
                         break;
-
                     case 2:
                         validateResult = this.validateFields(null, null, true);
                         if (validateResult.status) {
@@ -669,6 +668,7 @@
                 let self = this;
                 const previousButton = document.getElementById('previousButton');
                 const nextButton = document.getElementById('nextButton');
+
                 if (self.step !== 1) {
                     this.show(previousButton);
                 } else {
@@ -704,7 +704,7 @@
                             seats.innerHTML = self.formValues.numberOfSeats;
 
                             const selectedSeats = document.querySelector('.r-selected-seats');
-                            selectedSeats.innerHTML = JSON.parse(localStorage.getItem('selectedSeats')).join(',');
+                            selectedSeats.innerHTML = JSON.parse(localStorage.getItem('selectedSeats')).join(', ');
 
                         }
                         this.show(element);
@@ -750,10 +750,10 @@
                 }
             }
 
-            // Update selectes seats begin
             updateSelectedSeats(currentSelectedSeat) {
                 let self = this;
                 let selectedSeats = JSON.parse(localStorage.getItem('selectedSeats'));
+
                 if (!selectedSeats) {
                     selectedSeats = [];
                 }
@@ -771,19 +771,15 @@
 
                 localStorage.setItem('selectedSeats', JSON.stringify(selectedSeats));
             };
-            // Update selectes seats end
 
-            // Seat select event begin
             addSeatSelectEvents() {
                 const screenContainer = document.querySelector('.screen-container');
 
                 screenContainer.addEventListener('click', e => {
                     let selectedSeat = {};
 
-                    if (
-                        e.target.classList.contains('seat') &&
-                        !e.target.classList.contains('occupied')
-                    ) {
+                    if (e.target.classList.contains('seat') && !e.target.classList.contains('occupied')) {
+
                         e.target.classList.toggle('selected');
 
                         if (e.target.classList.contains('heart-seat')) {
@@ -802,9 +798,7 @@
                     }
                 });
             }
-            // Seat select event end
 
-            // Generate seats begin
             generateSeats() {
                 const screenContainer = document.querySelector('.screen-container');
 
@@ -840,13 +834,11 @@
                             seat.classList.add('heart-seat');
                         }
                         row.appendChild(seat);
-
                     }
 
                     screenContainer.appendChild(row);
                 }
             }
-            // Generate seats end
         }
 
         const form = document.querySelector('.form');
