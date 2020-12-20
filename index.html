@@ -316,8 +316,7 @@
 
     <div class="container">
         <div class="title">Cinema Seat Reservation </div>
-        <form action="#" class="form">
-
+        <form onsubmit="return false;" class="form">
             <div class="step step1">
                 <div class="flex-container">
                     <div class="input-group">
@@ -641,12 +640,11 @@
 
                         if (isFormValid) {
                             self.step++;
+                            const specifiedSeatNumberElement = document.querySelector('.specified-seat-number');
+                            specifiedSeatNumberElement.innerText = self.formValues.numberOfSeats;
+
+                            this.validateFields(null, null, true);
                         }
-
-                        const specifiedSeatNumberElement = document.querySelector('.specified-seat-number');
-                        specifiedSeatNumberElement.innerText = self.formValues.numberOfSeats;
-
-                        this.validateFields(null, null, true);
                         break;
                     case 2:
                         validateResult = this.validateFields(null, null, true);
@@ -759,11 +757,26 @@
                 }
 
                 if (currentSelectedSeat.status) {
-                    selectedSeats.push(currentSelectedSeat.value);
+                    // Check couple(heart) seats
+                    if (Array.isArray(currentSelectedSeat.value)) {
+                        currentSelectedSeat.value.forEach(element => {
+                            selectedSeats.push(element);
+                        })
+                    } else {
+                        selectedSeats.push(currentSelectedSeat.value);
+                    }
                 } else {
-                    selectedSeats = selectedSeats.filter(function (seat) {
-                        return seat != currentSelectedSeat.value;
-                    });
+                    // Check couple(heart) seats
+                    if (Array.isArray(currentSelectedSeat.value)) {
+                        selectedSeats = selectedSeats.filter(function (seat) {
+                            return currentSelectedSeat.value.indexOf(seat) === -1;
+                        });
+                    } else {
+                        selectedSeats = selectedSeats.filter(function (seat) {
+                            return seat != currentSelectedSeat.value;
+                        });
+                    }
+
                 }
 
                 const seatNumberElement = document.querySelector('.seat-number');
@@ -782,17 +795,34 @@
 
                         e.target.classList.toggle('selected');
 
+                        let checkHeartSeat = false;
                         if (e.target.classList.contains('heart-seat')) {
                             e.target.classList.toggle('heart-seat-selected');
+                            checkHeartSeat = true;
                         }
-
                         e.target.parentNode.childNodes.forEach(element => {
                             if (element.classList.contains('seat-row')) {
-                                selectedSeat.value = `${element.innerText}-${e.target.innerText}`;
+                                // Check couple(heart) seats, client can not select only one of them!
+                                if (checkHeartSeat) {
+                                    selectedSeat.value = [];
+                                    if (e.target.innerText === '5') {
+                                        selectedSeat.value.push(`${element.innerText}-${parseInt(e.target.innerText) + 1}`);
+                                        e.target.nextSibling.classList.toggle('heart-seat-selected');
+                                    } else {
+                                        selectedSeat.value.push(`${element.innerText}-${parseInt(e.target.innerText) - 1}`);
+                                        e.target.previousSibling.classList.toggle('heart-seat-selected');
+                                    }
+
+                                    selectedSeat.value.push(`${element.innerText}-${e.target.innerText}`);
+                                    selectedSeat.status = e.target.classList.contains('heart-seat-selected') ? true : false;
+
+                                } else {
+                                    selectedSeat.value = `${element.innerText}-${e.target.innerText}`;
+                                    selectedSeat.status = e.target.classList.contains('selected') ? true : false;
+                                }
                             }
                         })
 
-                        selectedSeat.status = e.target.classList.contains('selected') ? true : false;
                         this.updateSelectedSeats(selectedSeat);
                         this.validateFields();
                     }
@@ -856,6 +886,7 @@
         function goPrevious() {
             validator.goPrevious();
         };
+
     </script>
 
 </body>
